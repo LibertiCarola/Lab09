@@ -8,16 +8,16 @@ class Controller:
         self._model = model
         self._view = view
 
-        # Variabili per memorizzare le selezioni correnti
-        self.parco_selezionato = None
-        self.durata = None
-        self.costo = None
+        # Variabili per memorizzare le selezioni correnti                   # qui si aggiornano utili al momento
+        self.parco_selezionato = None           # stringa
+        self.durata = None                      # valore intero (n giorni)
+        self.costo = None                       # valore intero
 
-    def on_parco_change(self, e):
+    def on_parco_change(self, e):                                           #qunado viene preuta la dd_Parco restituisce valore e aggiorna valore
         """Aggiorna il parco selezionato e salva il valore."""
         self.parco_selezionato = e.control.value
 
-    def popola_dropdown_parco(self):
+    def popola_dropdown_parco(self):                                        # popola dd da database
         """Popola il menu a tendina dei parchi."""
         self._view.dd_parco.options.clear()
 
