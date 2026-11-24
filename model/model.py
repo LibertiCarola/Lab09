@@ -14,6 +14,7 @@ class Model:
         self._costo = 0
 
         # Aggiungere eventuali altri attributi
+
         # qui ci sono Cod relazioni
         self.Cod_Escursioni = {}                            # self.Cod_Escursioni[id_esc] = [id_pt_int]
         self.Cod_punti_interesse = {}                       # self.Cod_punti_interesse[id_pt_int] = [id_esc]
@@ -91,20 +92,22 @@ class Model:
 
         for esc in self.escursioni_map:
             esc_ogg = self.escursioni_map[esc]
+            attrazioni = {}
             if esc_ogg.id_parco == id_parco:                                                     #lista pt_interesse
-                self.escursioni_utili.append([esc_ogg.id, esc_ogg.nome, esc_ogg.durata_giorni, esc_ogg.costo, []])               # abbiamo una lista di liste con info escursioni
+                self.escursioni_utili.append([esc_ogg.id, esc_ogg.nome, esc_ogg.durata_giorni, esc_ogg.costo, attrazioni])               # abbiamo una lista di liste con info escursioni
 
         if self.relazioni:
             for rel in self.relazioni:
                 ID_esc = rel["id_escursione"]
                 ID_pt_int = rel["id_punto_interesse"]
+                NOME_pt_int = self.punti_interesse_map[ID_pt_int].nome
                 voto_pt_int = self.punti_interesse_map[ID_pt_int].voto_visitatori
 
                 for escursione in self.escursioni_utili:
                     if escursione[0] == ID_esc:
-                        escursione[4].append([ID_pt_int, voto_pt_int])          # escursioni_utili è ora una lista con stottoliste-escursione e sotto-sottoliste punti-interesse
+                        escursione[4][ID_pt_int] = [NOME_pt_int, voto_pt_int]         # escursioni_utili è ora una lista con stottoliste-escursione e sotto-dizionario punti-interesse
                                     # esc_0           # esc_1           ...
-    # abbiamo escursioni_utili = [[info, [pt_int]], [info, [pt_int]], [info, [pt_int]]]   ->  entriamo nella ricorsione
+    # abbiamo escursioni_utili = [[info, dict[COD_pt_int] = [nome, voto], ...]   ->  entriamo nella ricorsione
         self._ricorsione(0, [], 0, 0, 0, set())
         self.completamento_pacchetto_ottimo()
         return self._pacchetto_ottimo, self._costo, self._valore_ottimo
@@ -114,7 +117,7 @@ class Model:
     def _ricorsione(self, indice_escursione: int, pacchetto_parziale: list, durata_parziale: int, costo_parziale: float, punteggio_parziale: int, punti_interesse_inclusi: set):
         """ Algoritmo di ricorsione che deve trovare il pacchetto che massimizza il voto complessivo dei visitatori"""
 
-        # TODO: è possibile cambiare i parametri formali della funzione se ritenuto opportuno
+        # è possibile cambiare i parametri formali della funzione se ritenuto opportuno
 
     #1. controlla che il pacchetto corrente sia il migliore altrimenti li aggiorna
         if punteggio_parziale > self._valore_ottimo:                            #possiamo fare questa operazione perché ala fine di ogni ciclo controlliamo che non superi prezzo e durata, quindi avremo in imput tutti dati accettabili
@@ -133,10 +136,10 @@ class Model:
             somma_voti = 0
             id_attivita_incluse = set()
 
-            for attivita in esc[4]:  # qui lavoriamo con i punti d'interesse
-                ID_attivita = attivita[0]
+            for key_attivita in esc[4]:  # qui lavoriamo con i punti d'interesse nel diz
+                ID_attivita = key_attivita
                 id_attivita_incluse.add(ID_attivita)
-                voto = attivita[1]
+                voto = esc[4][key_attivita][1]
                 somma_voti += voto
 
     #3. verifica vincoli per ogni combinazione
@@ -160,5 +163,15 @@ class Model:
         lista = []
         for codice in self._pacchetto_ottimo:
             oggetto = self.escursioni_map[codice]
+
+            for escursione in self.escursioni_utili:
+                if escursione[0] == codice:
+                    lista_finale = []
+
+                    for attrazione in escursione[4].values():
+                        stringa = f'{attrazione[0]} ({attrazione[1]})'
+                        lista_finale.append(stringa)
+                    oggetto.punti_interesse = lista_finale
             lista.append(oggetto)
+
         self._pacchetto_ottimo = lista
